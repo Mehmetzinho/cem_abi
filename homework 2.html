@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teamwork Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        #search-bar {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+        }
+
+        aside {
+            background: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .navigation {
+            list-style: none;
+            padding: 0;
+        }
+
+        .navigation li {
+            margin: 10px 0;
+        }
+
+        .calendar {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .days div {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            min-height: 50px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .days div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .days div .activity {
+            font-size: 12px;
+            color: #555;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        #add-event-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #add-event-btn:hover {
+            background: #0056b3;
+        }
+
+        #event-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        #event-modal input {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Teamwork Calendar</h1>
+        <div class="header-controls">
+            <input type="text" placeholder="Search events..." id="search-bar">
+        </div>
+    </header>
+    <main>
+        <aside>
+            <ul class="navigation">
+                <li><button id="prev-month">← Previous</button></li>
+                <li><span id="current-month">December 2024</span></li>
+                <li><button id="next-month">Next →</button></li>
+            </ul>
+        </aside>
+        <section class="calendar">
+            <div class="weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+            <div id="calendar-days" class="days"></div>
+        </section>
+    </main>
+
+    <!-- Modal for adding events -->
+    <div id="overlay"></div>
+    <div id="event-modal">
+        <h3>Add Event</h3>
+        <input type="text" id="event-input" placeholder="Event description">
+        <div class="modal-buttons">
+            <button id="save-event-btn">Save</button>
+            <button id="cancel-event-btn">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const calendarDays = document.getElementById("calendar-days");
+        const currentMonth = document.getElementById("current-month");
+        const eventModal = document.getElementById("event-modal");
+        const overlay = document.getElementById("overlay");
+        const eventInput = document.getElementById("event-input");
+        const saveEventButton = document.getElementById("save-event-btn");
+        const cancelEventButton = document.getElementById("cancel-event-btn");
+
+        let selectedDay;
+        const activities = {}; // Store events by date
+
+        const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+
+        function formatDate(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        }
+
+        function renderCalendar(month, year) {
+            calendarDays.innerHTML = "";
+            const days = daysInMonth(month, year);
+
+            for (let i = 1; i <= days; i++) {
+                const dateKey = formatDate(year, month, i);
+                const dayDiv = document.createElement("div");
+                dayDiv.innerText = i;
+
+                // Add saved activities to the day
+                if (activities[dateKey]) {
+                    activities[dateKey].forEach(activity => {
+                        const activitySpan = document.createElement("div");
+                        activitySpan.className = "activity";
+                        activitySpan.innerText = activity;
+                        dayDiv.appendChild(activitySpan);
+                    });
+                }
+
+                dayDiv.addEventListener("click", () => openEventModal(dayDiv, dateKey));
+                calendarDays.appendChild(dayDiv);
+            }
+        }
+
+        function openEventModal(dayDiv, dateKey) {
+            selectedDay = dateKey;
+            eventInput.value = "";
+            eventModal.style.display = "block";
+            overlay.style.display = "block";
+        }
+
+        function closeEventModal() {
+            eventModal.style.display = "none";
+            overlay.style.display = "none";
+        }
+
+        saveEventButton.addEventListener("click", () => {
+            const eventText = eventInput.value.trim();
+            if (eventText) {
+                if (!activities[selectedDay]) {
+                    activities[selectedDay] = [];
+                }
+                activities[selectedDay].push(eventText);
+                updateCalendar();
+            }
+            closeEventModal();
+        });
+
+        cancelEventButton.addEventListener("click", closeEventModal);
+        overlay.addEventListener("click", closeEventModal);
+
+        const today = new Date();
+        let currentYear = today.getFullYear();
+        let currentMonthNumber = today.getMonth();
+
+        function updateCalendar() {
+            currentMonth.textContent = `${today.toLocaleString("default", {
+                month: "long",
+            })} ${currentYear}`;
+            renderCalendar(currentMonthNumber, currentYear);
+        }
+
+        document.getElementById("prev-month").addEventListener("click", () => {
+            currentMonthNumber = (currentMonthNumber - 1 + 12) % 12;
+            if (currentMonthNumber === 11) currentYear--;
+            updateCalendar();
+        });
+
+        document.getElementById("next-month").addEventListener("click", () => {
+            currentMonthNumber = (currentMonthNumber + 1) % 12;
+            if (currentMonthNumber === 0) currentYear++;
+            updateCalendar();
+        });
+
+        updateCalendar();
+    </script>
+</body>
+</html>

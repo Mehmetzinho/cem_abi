@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Form with Validation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #0563bb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #004d99;
+    }
+
+    .results {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .result-average {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .result-average.red {
+      color: red;
+    }
+
+    .result-average.orange {
+      color: orange;
+    }
+
+    .result-average.green {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Contact Form</h1>
+  <form id="contactForm">
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" required>
+
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" name="lastName" required>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <label for="phone">Phone Number:</label>
+    <input type="tel" id="phone" name="phone" required>
+
+    <label for="address">Address:</label>
+    <textarea id="address" name="address" required></textarea>
+
+    <!-- Additional Questions -->
+    <label for="rating1">How would you rate our website? (1-10)</label>
+    <input type="number" id="rating1" name="rating1" min="1" max="10" required>
+
+    <label for="rating2">How likely are you to recommend us? (1-10)</label>
+    <input type="number" id="rating2" name="rating2" min="1" max="10" required>
+
+    <label for="rating3">Rate our customer support. (1-10)</label>
+    <input type="number" id="rating3" name="rating3" min="1" max="10" required>
+
+    <label for="rating4">Rate our pricing. (1-10)</label>
+    <input type="number" id="rating4" name="rating4" min="1" max="10" required>
+
+    <label for="rating5">Overall satisfaction? (1-10)</label>
+    <input type="number" id="rating5" name="rating5" min="1" max="10" required>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="results" class="results" style="display: none;">
+    <h2>Results</h2>
+    <p id="resultContent"></p>
+    <p id="averageResult" class="result-average"></p>
+  </div>
+
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      // Gather form data
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const address = document.getElementById('address').value;
+
+      // Collect numeric ratings
+      const ratings = [
+        parseInt(document.getElementById('rating1').value),
+        parseInt(document.getElementById('rating2').value),
+        parseInt(document.getElementById('rating3').value),
+        parseInt(document.getElementById('rating4').value),
+        parseInt(document.getElementById('rating5').value)
+      ];
+
+      // Calculate average
+      const average = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+
+      // Create a result object
+      const resultObject = {
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        ratings,
+        average
+      };
+
+      // Display results on the page
+      const resultContent = `
+        <p><strong>First Name:</strong> ${firstName}</p>
+        <p><strong>Last Name:</strong> ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Address:</strong> ${address}</p>
+      `;
+
+      const averageResult = `<strong>Average Rating:</strong> ${average.toFixed(1)}`;
+
+      // Display average rating with color coding
+      const averageResultElement = document.getElementById('averageResult');
+      averageResultElement.textContent = averageResult;
+      if (average <= 3.4) {
+        averageResultElement.className = 'result-average red';
+      } else if (average <= 7.1) {
+        averageResultElement.className = 'result-average orange';
+      } else {
+        averageResultElement.className = 'result-average green';
+      }
+
+      // Show results
+      document.getElementById('resultContent').innerHTML = resultContent;
+      document.getElementById('results').style.display = 'block';
+
+      // Log the result object to the console
+      console.log(resultObject);
+    });
+  </script>
+</body>
+</html>
